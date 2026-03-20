@@ -43,6 +43,7 @@ dev = [
 [project.scripts]
 servicenow-mcp = "servicenow_mcp.cli:main"
 servicenow-mcp-sse = "servicenow_mcp.server_sse:main"
+servicenow-mcp-railway = "servicenow_mcp.server_railway:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/servicenow_mcp"]
