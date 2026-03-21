@@ -507,7 +507,7 @@ def list_incidents(
         if is_sys_id:
             filters.append(f"assignment_group={params.assignment_group}")
         else:
-            filters.append(f"assignment_groupLIKE{params.assignment_group}")
+            filters.append(f"assignment_group.nameLIKE{params.assignment_group}")
 
     order_clause = (
         "^ORDERBYDESCsys_created_on" if params.order_by.lower() != "asc" else "^ORDERBYsys_created_on"
