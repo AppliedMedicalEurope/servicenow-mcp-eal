@@ -9,13 +9,35 @@ import base64
 import hashlib
 import hmac
 import json
+import logging
 import os
 import secrets
 import time
 from urllib.parse import parse_qs
 
+import requests
 import uvicorn
 from dotenv import load_dotenv
+
+# ---------------------------------------------------------------------------
+# Request logging — patch Session.send so every outbound HTTP call is logged
+# to stdout (visible in Railway deploy logs) before tools are imported.
+# ---------------------------------------------------------------------------
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+_log = logging.getLogger("servicenow_mcp.http")
+
+_original_send = requests.Session.send
+
+
+def _logged_send(self, request, **kwargs):
+    _log.info("→ %s %s", request.method, request.url)
+    response = _original_send(self, request, **kwargs)
+    _log.info("← %s %s (%.3fs)", response.status_code, request.url, response.elapsed.total_seconds())
+    return response
+
+
+requests.Session.send = _logged_send
 
 from servicenow_mcp.server_sse import create_servicenow_mcp, create_starlette_app
 
