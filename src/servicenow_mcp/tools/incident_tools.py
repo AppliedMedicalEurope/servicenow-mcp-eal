@@ -68,13 +68,21 @@ class ResolveIncidentParams(BaseModel):
 
 class ListIncidentsParams(BaseModel):
     """Parameters for listing incidents."""
-    
+
     limit: int = Field(10, description="Maximum number of incidents to return")
     offset: int = Field(0, description="Offset for pagination")
     state: Optional[str] = Field(None, description="Filter by incident state")
     assigned_to: Optional[str] = Field(None, description="Filter by assigned user")
     category: Optional[str] = Field(None, description="Filter by category")
     query: Optional[str] = Field(None, description="Search query for incidents")
+    assignment_group: Optional[str] = Field(
+        None,
+        description="Filter by assignment group — accepts a sys_id (32-char hex) for exact match or a text string for LIKE search",
+    )
+    order_by: str = Field(
+        "desc",
+        description="Sort order for sys_created_on: 'desc' (default) or 'asc'",
+    )
 
 
 class GetIncidentByNumberParams(BaseModel):
@@ -492,9 +500,19 @@ def list_incidents(
         filters.append(f"category={params.category}")
     if params.query:
         filters.append(f"short_descriptionLIKE{params.query}^ORdescriptionLIKE{params.query}")
-    
-    if filters:
-        query_params["sysparm_query"] = "^".join(filters)
+    if params.assignment_group:
+        is_sys_id = len(params.assignment_group) == 32 and all(
+            c in "0123456789abcdef" for c in params.assignment_group
+        )
+        if is_sys_id:
+            filters.append(f"assignment_group={params.assignment_group}")
+        else:
+            filters.append(f"assignment_groupLIKE{params.assignment_group}")
+
+    order_clause = (
+        "^ORDERBYDESCsys_created_on" if params.order_by.lower() != "asc" else "^ORDERBYsys_created_on"
+    )
+    query_params["sysparm_query"] = ("^".join(filters) if filters else "") + order_clause
     
     # Make request
     try:
@@ -510,11 +528,14 @@ def list_incidents(
         incidents = []
         
         for incident_data in data.get("result", []):
-            # Handle assigned_to field which could be a string or a dictionary
+            # Handle reference fields which could be a string or a dictionary
             assigned_to = incident_data.get("assigned_to")
             if isinstance(assigned_to, dict):
                 assigned_to = assigned_to.get("display_value")
-            
+            assignment_group = incident_data.get("assignment_group")
+            if isinstance(assignment_group, dict):
+                assignment_group = assignment_group.get("display_value")
+
             incident = {
                 "sys_id": incident_data.get("sys_id"),
                 "number": incident_data.get("number"),
@@ -523,6 +544,7 @@ def list_incidents(
                 "state": incident_data.get("state"),
                 "priority": incident_data.get("priority"),
                 "assigned_to": assigned_to,
+                "assignment_group": assignment_group,
                 "category": incident_data.get("category"),
                 "subcategory": incident_data.get("subcategory"),
                 "created_on": incident_data.get("sys_created_on"),
