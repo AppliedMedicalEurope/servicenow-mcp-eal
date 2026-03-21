@@ -397,7 +397,13 @@ def get_tool_definitions(
             list_incidents_tool,
             ListIncidentsParams,
             str,  # Expects JSON string
-            "List incidents from ServiceNow",
+            (
+                "List incidents from ServiceNow with optional filters. "
+                "Use 'assignment_group' to filter by group name (partial match) or group sys_id — do NOT use 'query' for this. "
+                "Use 'state', 'assigned_to', and 'category' for exact-match field filters. "
+                "Use 'query' only for free-text search across short_description and description fields. "
+                "Never put raw ServiceNow encoded query syntax into any parameter."
+            ),
             "json",  # Tool returns list/dict, needs JSON dump
         ),
         "get_incident_by_number":(
