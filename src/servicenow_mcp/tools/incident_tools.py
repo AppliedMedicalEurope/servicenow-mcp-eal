@@ -74,7 +74,7 @@ class ListIncidentsParams(BaseModel):
     state: Optional[str] = Field(None, description="Filter by incident state")
     assigned_to: Optional[str] = Field(None, description="Filter by assigned user")
     category: Optional[str] = Field(None, description="Filter by category")
-    query: Optional[str] = Field(None, description="Search query for incidents")
+    query: Optional[str] = Field(None, description="Free-text search across short_description and description only. Do not use for assignment_group or other field filters.")
     assignment_group: Optional[str] = Field(
         None,
         description="Filter by assignment group — accepts a sys_id (32-char hex) for exact match or a text string for LIKE search",
