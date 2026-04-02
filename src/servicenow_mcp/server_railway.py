@@ -46,7 +46,7 @@ from servicenow_mcp.server_sse import create_servicenow_mcp, create_starlette_ap
 # Signed-token helpers
 # ---------------------------------------------------------------------------
 
-def _make_signed_token(client_id: str, signing_key: bytes, ttl: int = 3600) -> str:
+def _make_signed_token(client_id: str, signing_key: bytes, ttl: int = 86400) -> str:
     expiry = int(time.time()) + ttl
     payload = f"{client_id}:{expiry}".encode()
     sig = hmac.new(signing_key, payload, hashlib.sha256).digest()
@@ -210,7 +210,7 @@ def create_oauth_protected_app(mcp_app, client_id: str, client_secret: str, serv
                     await _send_json(send, 200, {
                         "access_token": token,
                         "token_type": "bearer",
-                        "expires_in": 3600,
+                        "expires_in": 86400,
                     })
                     return
 
@@ -227,7 +227,7 @@ def create_oauth_protected_app(mcp_app, client_id: str, client_secret: str, serv
                     await _send_json(send, 200, {
                         "access_token": token,
                         "token_type": "bearer",
-                        "expires_in": 3600,
+                        "expires_in": 86400,
                     })
                     return
 
@@ -250,7 +250,8 @@ def create_oauth_protected_app(mcp_app, client_id: str, client_secret: str, serv
                 return
             if _verify_signed_token(auth[len("Bearer "):], signing_key) is None:
                 await _send_json(send, 401, {"error": "invalid_token"}, [
-                    (b"www-authenticate", b'Bearer error="invalid_token"'),
+                    (b"www-authenticate",
+                     f'Bearer error="invalid_token", realm="{server_url}", resource_metadata="{server_url}/.well-known/oauth-protected-resource"'.encode()),
                 ])
                 return
 
