@@ -32,7 +32,9 @@ class CreateStoryParams(BaseModel):
     epic: Optional[str] = Field(None, description="Epic that the story belongs to. It requires the System ID of the epic.")
     project: Optional[str] = Field(None, description="Project that the story belongs to. It requires the System ID of the project.")
     work_notes: Optional[str] = Field(None, description="Work notes to add to the story. Used for adding notes and comments to a story")
-    
+    planned_start_date: Optional[str] = Field(None, description="Planned start date (YYYY-MM-DD HH:MM:SS)")
+    planned_end_date: Optional[str] = Field(None, description="Planned end date (YYYY-MM-DD HH:MM:SS)")
+
 class UpdateStoryParams(BaseModel):
     """Parameters for updating a story."""
 
@@ -47,6 +49,8 @@ class UpdateStoryParams(BaseModel):
     epic: Optional[str] = Field(None, description="Epic that the story belongs to. It requires the System ID of the epic.")
     project: Optional[str] = Field(None, description="Project that the story belongs to. It requires the System ID of the project.")
     work_notes: Optional[str] = Field(None, description="Work notes to add to the story. Used for adding notes and comments to a story")
+    planned_start_date: Optional[str] = Field(None, description="Planned start date (YYYY-MM-DD HH:MM:SS)")
+    planned_end_date: Optional[str] = Field(None, description="Planned end date (YYYY-MM-DD HH:MM:SS)")
 
 class ListStoriesParams(BaseModel):
     """Parameters for listing stories."""
@@ -231,7 +235,11 @@ def create_story(
         data["project"] = validated_params.project
     if validated_params.work_notes:
         data["work_notes"] = validated_params.work_notes
-    
+    if validated_params.planned_start_date:
+        data["planned_start_date"] = validated_params.planned_start_date
+    if validated_params.planned_end_date:
+        data["planned_end_date"] = validated_params.planned_end_date
+
     # Get the instance URL
     instance_url = _get_instance_url(auth_manager, server_config)
     if not instance_url:
@@ -239,7 +247,7 @@ def create_story(
             "success": False,
             "message": "Cannot find instance_url in either server_config or auth_manager",
         }
-    
+
     # Get the headers
     headers = _get_headers(auth_manager, server_config)
     if not headers:
@@ -247,10 +255,10 @@ def create_story(
             "success": False,
             "message": "Cannot find get_headers method in either auth_manager or server_config",
         }
-    
+
     # Add Content-Type header
     headers["Content-Type"] = "application/json"
-    
+
     # Make the API request
     url = f"{instance_url}/api/now/table/rm_story"
     
@@ -324,7 +332,11 @@ def update_story(
         data["assigned_to"] = validated_params.assigned_to
     if validated_params.work_notes:
         data["work_notes"] = validated_params.work_notes
-    
+    if validated_params.planned_start_date:
+        data["planned_start_date"] = validated_params.planned_start_date
+    if validated_params.planned_end_date:
+        data["planned_end_date"] = validated_params.planned_end_date
+
     # Get the instance URL
     instance_url = _get_instance_url(auth_manager, server_config)
     if not instance_url:
@@ -332,7 +344,7 @@ def update_story(
             "success": False,
             "message": "Cannot find instance_url in either server_config or auth_manager",
         }
-    
+
     # Get the headers
     headers = _get_headers(auth_manager, server_config)
     if not headers:
@@ -340,10 +352,10 @@ def update_story(
             "success": False,
             "message": "Cannot find get_headers method in either auth_manager or server_config",
         }
-    
+
     # Add Content-Type header
     headers["Content-Type"] = "application/json"
-    
+
     # Make the API request
     url = f"{instance_url}/api/now/table/rm_story/{validated_params.story_id}"
     
